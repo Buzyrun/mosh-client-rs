@@ -29,7 +29,6 @@ pub(crate) enum ReassemblyError {
     FragmentNumberOutOfRange,
     ConflictingFragment,
     InstructionTooLarge,
-    TooManyIncompleteInstructions,
     TimeMovedBackwards,
     TimerExhausted,
 }
@@ -38,6 +37,9 @@ pub(crate) enum ReassemblyError {
 pub(crate) enum ReassemblyOutcome {
     Pending,
     Duplicate,
+    /// A fragment of an instruction older than the retained incomplete one.
+    /// The sender has already moved on, so the fragment is dropped.
+    Stale,
     Complete(Vec<u8>),
 }
 
@@ -175,8 +177,19 @@ impl FragmentReassembler {
                 };
             }
             // The Option structurally enforces the one-incomplete-message limit.
-            if self.incomplete.is_some() {
-                return Err(ReassemblyError::TooManyIncompleteInstructions);
+            // Identifiers only grow, so a newer instruction supersedes an older
+            // incomplete one whose missing fragment may never arrive, and a late
+            // fragment of an older instruction is dropped. Rejecting the newer
+            // identifier instead would stall every later multi-fragment update
+            // until expiry whenever one fragment is lost.
+            if let Some(incomplete) = &self.incomplete {
+                if fragment.identifier < incomplete.identifier {
+                    return Ok(ReassemblyOutcome::Stale);
+                }
+                if fragment.body.len() > MAX_COMPRESSED_INSTRUCTION_BYTES {
+                    return Err(ReassemblyError::InstructionTooLarge);
+                }
+                self.incomplete = None;
             }
             if fragment.body.len() > MAX_COMPRESSED_INSTRUCTION_BYTES {
                 return Err(ReassemblyError::InstructionTooLarge);

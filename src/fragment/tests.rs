@@ -188,18 +188,52 @@ fn missing_fragments_expire_at_the_fixed_first_fragment_deadline() {
 }
 
 #[test]
-fn incomplete_instruction_and_fragment_count_limits_fail_before_mutation() {
+fn a_newer_identifier_replaces_the_incomplete_instruction() {
+    // A lost fragment must not block every later multi-fragment instruction:
+    // the sender has moved on, so the newer identifier supersedes the older one.
+    let mut reassembler = FragmentReassembler::new(0);
+    reassembler
+        .push(0, observed_fragment(5, 0, false, b"old"))
+        .unwrap();
+    assert_eq!(
+        reassembler.push(0, observed_fragment(9, 0, false, b"ne")),
+        Ok(ReassemblyOutcome::Pending)
+    );
+    assert_eq!(reassembler.incomplete_count(), 1);
+    assert_eq!(reassembler.stored_bytes(), 2);
+    assert_eq!(
+        reassembler.push(0, observed_fragment(9, 1, true, b"w")),
+        Ok(ReassemblyOutcome::Complete(b"new".to_vec()))
+    );
+    assert_eq!(reassembler.incomplete_count(), 0);
+}
+
+#[test]
+fn a_late_fragment_of_an_older_instruction_is_ignored_without_mutation() {
+    let mut reassembler = FragmentReassembler::new(0);
+    reassembler
+        .push(0, observed_fragment(9, 0, false, b"new"))
+        .unwrap();
+    let stored = reassembler.stored_bytes();
+    assert_eq!(
+        reassembler.push(0, observed_fragment(5, 1, true, b"old")),
+        Ok(ReassemblyOutcome::Stale)
+    );
+    assert_eq!(reassembler.incomplete_count(), 1);
+    assert_eq!(reassembler.stored_bytes(), stored);
+    assert_eq!(
+        reassembler.push(0, observed_fragment(9, 1, true, b"!")),
+        Ok(ReassemblyOutcome::Complete(b"new!".to_vec()))
+    );
+}
+
+#[test]
+fn fragment_count_limit_fails_before_mutation() {
     let mut reassembler = FragmentReassembler::new(0);
     reassembler
         .push(0, observed_fragment(0, 0, false, b"x"))
         .unwrap();
     let stored = reassembler.stored_bytes();
-    assert_eq!(
-        reassembler.push(0, observed_fragment(99, 0, false, b"x")),
-        Err(ReassemblyError::TooManyIncompleteInstructions)
-    );
-    assert_eq!(reassembler.incomplete_count(), 1);
-    assert_eq!(reassembler.stored_bytes(), stored);
     assert_eq!(
         reassembler.push(
             0,

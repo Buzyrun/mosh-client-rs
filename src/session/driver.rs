@@ -106,10 +106,7 @@ impl From<DriverError> for SessionError {
                 | InstructionError::StateDifferenceTooLarge,
             )
             | DriverError::Paint(_)
-            | DriverError::Reassembly(
-                ReassemblyError::InstructionTooLarge
-                | ReassemblyError::TooManyIncompleteInstructions,
-            ) => Self::ResourceLimit,
+            | DriverError::Reassembly(ReassemblyError::InstructionTooLarge) => Self::ResourceLimit,
             DriverError::IncompleteDatagramSend => Self::Io(ErrorKind::WriteZero),
             DriverError::MissingClientState | DriverError::MissingTerminalState => {
                 Self::InternalState

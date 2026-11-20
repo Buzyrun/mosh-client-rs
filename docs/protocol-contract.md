@@ -231,7 +231,10 @@ numbered zero takes the same bounded path without retaining incomplete state.
 The receiver applies these local defensive rules:
 
 - retain at most 749 fragments in one instruction;
-- retain one incomplete instruction identifier and at most 1 MiB total;
+- retain one incomplete instruction identifier and at most 1 MiB total; a
+  fragment with a newer identifier replaces the retained instruction, and a
+  fragment with an older identifier is dropped without error
+  ([decision 0013](decisions/0013-newer-instruction-supersedes-incomplete.md));
 - retain at most 1 MiB for one compressed instruction;
 - expire an incomplete instruction 10 monotonic seconds after its first
   retained fragment;

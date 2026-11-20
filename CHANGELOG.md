@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- A fragment with a newer identifier replaces the retained incomplete
+  instruction instead of ending the Session with `ResourceLimit`; a late
+  fragment of an older instruction is dropped. Lossy paths no longer end
+  healthy Sessions when one fragment of a multi-fragment update is lost
+  (decision 0013).
+
 ## 0.1.4
 
 - Accept OSC 0/1/2 titles containing semicolons without changing the

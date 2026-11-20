@@ -20,7 +20,7 @@ resource measurement, and a recorded rollback path.
 | Fragments in one instruction | 749, derived from the message and fragment bounds | Reject message |
 | Reassembled compressed instruction | 1 MiB | Reject message |
 | Decompressed instruction | 2 MiB | Reject message |
-| Concurrent incomplete instructions | One initially | Reject another identifier; increase only if a stock fixture requires overlap |
+| Concurrent incomplete instructions | One | A newer identifier replaces the retained one; an older identifier's fragment is dropped ([decision 0013](decisions/0013-newer-instruction-supersedes-incomplete.md)) |
 | Total incomplete-fragment storage | 1 MiB | Reject new fragment |
 | Incomplete instruction lifetime | 10 seconds monotonic | Expire and count |
 | Protocol nesting | Four known message levels | Reject deeper known or unknown structure |
