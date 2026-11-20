@@ -45,6 +45,16 @@ multi-fragment update for up to the 10-second incomplete lifetime.
   bound is rejected before the retained instruction is dropped.
 - `ReassemblyError::TooManyIncompleteInstructions` is removed.
 
+## Assumption
+
+This decision assumes that fragment identifiers from one sender only grow, as
+the encoder in this crate does. The local stock fixtures have not yet recorded
+stock identifier generation (`docs/protocol-contract.md` keeps it outside the
+contract). The failure mode is bounded: if a stock server ever reused or
+lowered an identifier, the newer fragments would be dropped as `Stale` until
+the retained instruction expires after 10 seconds. The Session would not end.
+Record identifier evidence in `docs/provenance.md` when a fixture captures it.
+
 ## Consequences
 
 - Loss of one fragment no longer ends a Session or stalls later updates. The

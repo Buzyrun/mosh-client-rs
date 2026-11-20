@@ -220,7 +220,8 @@ Author:
 - Superseding (2026-11-20, [decision 0013](decisions/0013-newer-instruction-supersedes-incomplete.md)):
   a black-box lossy-relay run against stock 1.4.0 showed that rejecting a
   newer identifier ended Sessions at 15-30% loss; a newer identifier now
-  replaces the retained incomplete one.
+  replaces the retained incomplete one. This assumes growing identifiers, which
+  no fixture has recorded yet; the bounded failure mode is in decision 0013.
 - Limits: the project retains at most 749 fragments, one incomplete identifier,
   and 1 MiB total for 10 seconds from the first fragment. These are local
   defensive policies. The fixture does not establish stock retransmission,
